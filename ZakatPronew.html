@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zakat Pro | Advanced Calculator</title>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root {
+            --ir-blue: #004f9f;
+            --gold: #b38728;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header { text-align: center; border-bottom: 2px solid var(--light-bg); margin-bottom: 30px; padding-bottom: 20px; }
+        .header h1 { color: var(--ir-blue); margin: 0; font-size: 28px; }
+        .header p { color: var(--gold); font-weight: bold; margin-top: 5px; }
+
+        .section-title {
+            background: var(--light-bg);
+            padding: 10px 15px;
+            border-left: 4px solid var(--gold);
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .row-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .add-btn {
+            background: none;
+            border: 1px dashed var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .remove-btn { color: #ff5f5f; cursor: pointer; border: none; background: none; font-size: 18px; }
+
+        .summary-card {
+            background: var(--ir-blue);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .zakat-total { font-size: 42px; font-weight: bold; margin: 10px 0; }
+        
+        .nisab-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            background: var(--gold);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-pdf {
+            width: 100%;
+            background: white;
+            color: var(--ir-blue);
+            border: 1px solid var(--ir-blue);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .helper-text { font-size: 12px; color: #777; margin-bottom: 15px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app-content">
+    <div class="header">
+        <h1>Zakat Calculator</h1>
+        <p>As-Sunnah Foundation & Islamic Relief Standard</p>
+    </div>
+
+    <!-- 1. Market Rates -->
+    <div class="section-title">1. Today's Market Rates</div>
+    <div class="row-item" style="grid-template-columns: 1fr 1fr;">
+        <input type="number" id="gRate" placeholder="Gold Price (1g 24K)">
+        <input type="number" id="sRate" placeholder="Silver Price (1g)">
+    </div>
+    <span class="helper-text">Required to calculate Nisab threshold.</span>
+
+    <!-- 2. Gold Section -->
+    <div class="section-title">
+        2. Gold Assets
+        <button class="add-btn" onclick="addRow('gold-container')">+ Add Gold Item</button>
+    </div>
+    <div id="gold-container">
+        <div class="row-item">
+            <input type="text" placeholder="Item Name (e.g. Necklace)">
+            <input type="number" class="weight" placeholder="Weight (g)">
+            <select class="karat">
+                <option value="24">24K</option><option value="22">22K</option>
+                <option value="21">21K</option><option value="18">18K</option>
+            </select>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- 3. Silver Section -->
+    <div class="section-title">
+        3. Silver Assets
+        <button class="add-btn" onclick="addRow('silver-container', true)">+ Add Silver Item</button>
+    </div>
+    <div id="silver-container">
+        <div class="row-item">
+            <input type="text" placeholder="Item Name">
+            <input type="number" class="weight" placeholder="Weight (g)">
+            <div style="font-size: 12px; opacity:0.6">Silver</div>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- 4. Cash & Debt -->
+    <div class="section-title">4. Cash & Liabilities</div>
+    <div class="row-item" style="grid-template-columns: 1fr 1fr;">
+        <input type="number" id="cash" placeholder="Total Cash / Bank">
+        <input type="number" id="debt" placeholder="Total Debts Owed">
+    </div>
+
+    <button class="btn-calculate" onclick="calculate()">Calculate My Zakat</button>
+
+    <div id="result" class="summary-card" style="display: none;">
+        <div>TOTAL ZAKAT DUE (2.5%)</div>
+        <div class="zakat-total" id="finalZakat">0.00</div>
+        <div id="nisabStatus">Checking Nisab...</div>
+        
+        <div class="nisab-box">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Total Net Assets:</span> <span id="netWealthVal">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Gold Nisab (87.48g):</span> <span id="gNisabVal">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Silver Nisab (612.36g):</span> <span id="sNisabVal">0</span>
+            </div>
+        </div>
+        <button class="btn-pdf" onclick="exportPDF()">Export Calculation Report (PDF)</button>
+    </div>
+</div>
+
+<script>
+    function addRow(containerId, isSilver = false) {
+        const container = document.getElementById(containerId);
+        const div = document.createElement('div');
+        div.className = 'row-item';
+        div.innerHTML = `
+            <input type="text" placeholder="Item Name">
+            <input type="number" class="weight" placeholder="Weight (g)">
+            ${isSilver ? '<div style="font-size: 12px; opacity:0.6">Silver</div>' : 
+            '<select class="karat"><option value="24">24K</option><option value="22">22K</option><option value="21">21K</option><option value="18">18K</option></select>'}
+            <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function calculate() {
+        const gRate = parseFloat(document.getElementById('gRate').value) || 0;
+        const sRate = parseFloat(document.getElementById('sRate').value) || 0;
+        
+        // Calculate Gold
+        let totalGoldValue = 0;
+        document.querySelectorAll('#gold-container .row-item').forEach(row => {
+            const w = parseFloat(row.querySelector('.weight').value) || 0;
+            const k = parseInt(row.querySelector('.karat').value);
+            totalGoldValue += (w * k / 24) * gRate;
+        });
+
+        // Calculate Silver
+        let totalSilverValue = 0;
+        document.querySelectorAll('#silver-container .row-item').forEach(row => {
+            const w = parseFloat(row.querySelector('.weight').value) || 0;
+            totalSilverValue += w * sRate;
+        });
+
+        const cash = parseFloat(document.getElementById('cash').value) || 0;
+        const debt = parseFloat(document.getElementById('debt').value) || 0;
+        const netWealth = (totalGoldValue + totalSilverValue + cash) - debt;
+
+        // Nisab Thresholds (87.48g Gold / 612.36g Silver)
+        const gNisab = 87.48 * gRate;
+        const sNisab = 612.36 * sRate;
+        const primaryNisab = sNisab > 0 ? sNisab : gNisab; // Scholars suggest Silver as baseline
+
+        let zakatDue = 0;
+        const status = document.getElementById('nisabStatus');
+        
+        if (netWealth >= primaryNisab && primaryNisab > 0) {
+            zakatDue = netWealth * 0.025;
+            status.innerHTML = "✅ YOUR WEALTH IS ABOVE NISAB";
+            status.style.color = "#80ffaa";
+        } else {
+            status.innerHTML = "⚠️ BELOW NISAB (No Zakat Required)";
+            status.style.color = "#ff8080";
+        }
+
+        // Display
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('finalZakat').innerText = zakatDue.toLocaleString(undefined, {minimumFractionDigits:2});
+        document.getElementById('netWealthVal').innerText = netWealth.toLocaleString();
+        document.getElementById('gNisabVal').innerText = gNisab.toLocaleString();
+        document.getElementById('sNisabVal').innerText = sNisab.toLocaleString();
+    }
+
+    function exportPDF() {
+        const element = document.getElementById('app-content');
+        const opt = {
+            margin: 10,
+            filename: 'Zakat_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+</body>
+</html>
